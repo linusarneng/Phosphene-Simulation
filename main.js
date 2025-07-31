@@ -1,6 +1,8 @@
 // ...MediaPipe-versionen av enableOutlineBackground finns nedan...
 // Endast prickad outline med MediaPipe Selfie Segmentation
 async function enableOutlineBackground() {
+    // Stoppa overall-animation om den körs
+    if (window._overallPhosphoneStop) window._overallPhosphoneStop();
     const video = document.getElementById('video');
     const canvas = document.getElementById('output-canvas');
     const loader = document.getElementById('loader');
@@ -230,6 +232,110 @@ document.addEventListener('DOMContentLoaded', function () {
             showNormalCamera();
         });
     }
+    // Overall-knapp: visa phosphone-rutnät över hela bilden
+    const overallCamBtn = document.getElementById('overall-cam');
+    if (overallCamBtn) {
+        overallCamBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            enableOverallPhosphones();
+        });
+    }
+
+// Phosphone-rutnät över hela bilden
+async function enableOverallPhosphones() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('output-canvas');
+    const loader = document.getElementById('loader');
+    const outlineOptions = document.getElementById('outline-options');
+    loader.style.display = 'none';
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+    if (outlineOptions) outlineOptions.style.display = 'none';
+
+    function resizeCanvas() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let running = true;
+    // Avbryt ev. tidigare animationer
+    if (window._overallPhosphoneStop) window._overallPhosphoneStop();
+    window._overallPhosphoneStop = () => { running = false; };
+
+    function drawPhosphones() {
+        if (!running) return;
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        // Justerbar täthet
+        let gridSize = 32;
+        const dotSpacingSlider = document.getElementById('dot-spacing-slider');
+        if (dotSpacingSlider) {
+            gridSize = 10 + 40 - parseInt(dotSpacingSlider.value, 10); // Omvänd slider
+        }
+        const rows = Math.round(canvas.height / (canvas.width / gridSize));
+        const colStep = canvas.width / gridSize;
+        const rowStep = canvas.height / rows;
+
+        // Hämta pixeldata från videon
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                // Ta pixel i mitten av rutan
+                const px = Math.floor((x + 0.5) * colStep);
+                const py = Math.floor((y + 0.5) * rowStep);
+                const i = (py * canvas.width + px) * 4;
+                const r = frame.data[i];
+                const g = frame.data[i+1];
+                const b = frame.data[i+2];
+                // Enkel luminans
+                const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+                // Slumpa intensitet och storlek
+                let intensity = (lum/255) * (0.7 + Math.random()*0.3);
+                // Ca 20% av phosphones blir extra ljusa för att öka "see-through"
+                if (Math.random() < 0.2) intensity = Math.min(1, intensity * 1.7 + 0.15);
+                const size = 8 + Math.random()*10;
+                // Rita bara om det är tillräckligt ljust
+                if (intensity > 0.08) {
+                    const grad = ctx.createRadialGradient(px, py, 0, px, py, size);
+                    grad.addColorStop(0, `rgba(255,255,255,${intensity})`);
+                    grad.addColorStop(0.2, `rgba(200,200,200,${0.7*intensity})`);
+                    grad.addColorStop(0.5, `rgba(120,120,120,${0.18*intensity})`);
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.globalAlpha = 0.95 * intensity;
+                    ctx.beginPath();
+                    ctx.arc(px, py, size, 0, 2 * Math.PI);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                }
+            }
+        }
+        ctx.globalAlpha = 1.0;
+        requestAnimationFrame(drawPhosphones);
+    }
+    drawPhosphones();
+}
+
+// Visa bara vanlig kamera (dölj canvas och outline-options)
+function showNormalCamera() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('output-canvas');
+    const outlineOptions = document.getElementById('outline-options');
+    if (video) video.style.display = 'block';
+    if (canvas) canvas.style.display = 'none';
+    if (outlineOptions) outlineOptions.style.display = 'none';
+}
     const outlineBgBtn = document.getElementById('outline-bg');
     if (outlineBgBtn) {
         outlineBgBtn.addEventListener('click', function (e) {
