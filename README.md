@@ -1,18 +1,19 @@
 
 
-# Implant Simulation
+# Implant Simulator
 
 <p align="center">
-  <img src="images/ss_01.png" alt="Implant Simulator Screenshot" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 24px #0005; margin-bottom: 24px;">
+  <img src="images/ss_01.png" alt="Phosphene Simulation Screenshot" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 24px #0005; margin-bottom: 24px;">
 </p>
 
-A web-based visual prosthesis (phosphone) simulator for research, education, and accessibility awareness. Simulates how a person with a visual implant might perceive the world using a live camera feed, AI segmentation, and various visualization modes.
+
+A web-based visual prosthesis (phosphene) simulator for research, education, and accessibility awareness. Simulates how a person with a visual implant might perceive the world using a live camera feed, AI segmentation, and various visualization modes.
 
 
 ## Features
 
 - Live camera feed
-- Multiple visualization modes: normal, background removal, outline, phosphone simulation
+- Multiple visualization modes: normal, background removal, outline, phosphene simulation
 - Adjustable grid and dot density
 - Simple, responsive interface (works on mobile)
 
@@ -21,7 +22,7 @@ A web-based visual prosthesis (phosphone) simulator for research, education, and
 
 - **Camera**: Uses `getUserMedia` to access your webcam.
 - **Segmentation**: MediaPipe Selfie Segmentation (runs in-browser, no server needed).
-- **Rendering**: Canvas overlays for outlines and phosphone dots.
+- **Rendering**: Canvas overlays for outlines and phosphene dots.
 - **UI**: Dropdown menu, slider, and grid toggle for easy interaction.
 
 ## Getting Started
