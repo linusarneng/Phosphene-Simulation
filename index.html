@@ -10,6 +10,7 @@
 </head>
 <body>
     <div class="menu-container">
+        <button id="rotate-btn" title="Rotera kameran">⟳</button>
         <button id="menu-btn">☰</button>
         <div id="menu-dropdown" class="menu-dropdown">
             <a href="#" id="normal-cam">Vanlig kamera</a>
@@ -32,16 +33,31 @@
     <video id="video" autoplay playsinline></video>
     <canvas id="output-canvas" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:2;"></canvas>
     <script>
-        async function startCamera() {
+        let usingBackCamera = false;
+        let currentStream = null;
+        const videoEl = document.getElementById('video');
+        const canvasEl = document.getElementById('output-canvas');
+        const rotateBtn = document.getElementById('rotate-btn');
+
+        async function startCamera(back = false) {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            let constraints = { video: { facingMode: back ? { exact: 'environment' } : 'user' } };
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoEl.srcObject = stream;
+                currentStream = stream;
             } catch (err) {
                 alert('Kunde inte starta kameran: ' + err.message);
             }
         }
         startCamera();
+
+        rotateBtn.addEventListener('click', () => {
+            usingBackCamera = !usingBackCamera;
+            startCamera(usingBackCamera);
+        });
     </script>
 </body>
 </html>
