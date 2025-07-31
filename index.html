@@ -10,12 +10,17 @@
     <div class="menu-container">
         <button id="menu-btn">☰</button>
         <div id="menu-dropdown" class="menu-dropdown">
-            <a href="#">Menyval 1</a>
+            <a href="#" id="normal-cam">Vanlig kamera</a>
+            <a href="#" id="remove-bg">Ta bort bakgrund</a>
             <a href="#">Menyval 2</a>
             <a href="#">Menyval 3</a>
         </div>
     </div>
+    <div id="loader" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100;align-items:center;justify-content:center;background:rgba(34,34,34,0.8);color:#fff;font-size:2rem;">
+        Laddar AI-modell...
+    </div>
     <video id="video" autoplay playsinline></video>
+    <canvas id="output-canvas" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:2;"></canvas>
     <script>
         async function startCamera() {
             try {

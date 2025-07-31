@@ -1,3 +1,7 @@
+/* Canvas-overlay spegelvänd för att matcha video */
+#output-canvas {
+    transform: scaleX(-1);
+}
 /* Meny uppe till höger */
 .menu-container {
     position: fixed;
