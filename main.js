@@ -98,10 +98,10 @@ async function enableOutlineBackground() {
         for (const p of phosphones) {
             const r = 14;
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-            grad.addColorStop(0, 'rgba(255,255,255,1)');
-            grad.addColorStop(0.2, 'rgba(255,255,200,0.7)');
-            grad.addColorStop(0.5, 'rgba(255,255,180,0.25)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            grad.addColorStop(0, 'rgba(255,255,255,1)'); // vit kärna
+            grad.addColorStop(0.2, 'rgba(200,200,200,0.7)'); // ljusgrå
+            grad.addColorStop(0.5, 'rgba(120,120,120,0.18)'); // svagare grå
+            grad.addColorStop(1, 'rgba(0,0,0,0)'); // transparent
             ctx.globalAlpha = 0.95;
             ctx.beginPath();
             ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
