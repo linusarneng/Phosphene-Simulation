@@ -55,6 +55,3 @@ implant_simulator/
 
 MIT License. See [LICENSE](LICENSE) for details.
 
----
-
-*Made with ❤️ by Linus Arneng. Contributions and feedback welcome!*
