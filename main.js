@@ -1,5 +1,19 @@
 // ...MediaPipe-versionen av enableOutlineBackground finns nedan...
 // Endast prickad outline med MediaPipe Selfie Segmentation
+// Rutnätläge toggle (globalt)
+let outlineGridMode = false;
+// Sätt eventlyssnare EN gång
+if (!window._outlineGridBtnInit) {
+    window._outlineGridBtnInit = true;
+    const outlineGridBtn = document.getElementById('outline-type-grid');
+    if (outlineGridBtn) {
+        outlineGridBtn.addEventListener('click', function () {
+            outlineGridMode = !outlineGridMode;
+            outlineGridBtn.classList.toggle('active', outlineGridMode);
+        });
+    }
+}
+
 async function enableOutlineBackground() {
     // Stoppa overall-animation om den körs
     if (window._overallPhosphoneStop) window._overallPhosphoneStop();
@@ -72,25 +86,54 @@ async function enableOutlineBackground() {
         } else if (outline.length > 0) {
             lastOutline = outline;
         }
-        // Välj ut phosphone-punkter
-        let dotSpacing = 15;
-        const dotSpacingSlider = document.getElementById('dot-spacing-slider');
-        if (dotSpacingSlider) {
-            dotSpacing = parseInt(dotSpacingSlider.value, 10) || 15;
-        }
-        const numPhosphones = Math.floor(outline.length / dotSpacing);
         let phosphones = [];
-        for (let i = 0; i < numPhosphones; i++) {
-            const idx = i * dotSpacing;
-            if (idx >= outline.length) break;
-            let [x, y] = outline[idx];
-            // Lägg till lite slump för att simulera "jitter" i stimuleringen
-            x += (Math.random() - 0.5) * 8;
-            y += (Math.random() - 0.5) * 8;
-            // Slumpa intensitet och storlek
-            const intensity = 0.7 + Math.random() * 0.3; // 0.7–1.0
-            const size = 10 + Math.random() * 10; // 10–20 px
-            phosphones.push({ x, y, intensity, size });
+        if (outlineGridMode) {
+            // Rutnät: 32x32
+            const gridX = 32;
+            const gridY = 32;
+            const cellW = canvas.width / gridX;
+            const cellH = canvas.height / gridY;
+            for (let gx = 0; gx < gridX; gx++) {
+                for (let gy = 0; gy < gridY; gy++) {
+                    // Mittpunkt i cellen
+                    const px = Math.floor((gx + 0.5) * cellW);
+                    const py = Math.floor((gy + 0.5) * cellH);
+                    // Finns kontur nära denna punkt?
+                    let minDist = 9999;
+                    let nearest = null;
+                    for (const [ox, oy] of outline) {
+                        const d = (ox-px)*(ox-px)+(oy-py)*(oy-py);
+                        if (d < minDist) {
+                            minDist = d;
+                            nearest = [ox, oy];
+                        }
+                    }
+                    if (nearest && Math.sqrt(minDist) < Math.max(cellW, cellH)) {
+                        // Slumpa intensitet och storlek
+                        const intensity = 0.7 + Math.random() * 0.3;
+                        const size = 10 + Math.random() * 10;
+                        phosphones.push({ x: px, y: py, intensity, size });
+                    }
+                }
+            }
+        } else {
+            // Vanliga prickar längs konturen
+            let dotSpacing = 15;
+            const dotSpacingSlider = document.getElementById('dot-spacing-slider');
+            if (dotSpacingSlider) {
+                dotSpacing = parseInt(dotSpacingSlider.value, 10) || 15;
+            }
+            const numPhosphones = Math.floor(outline.length / dotSpacing);
+            for (let i = 0; i < numPhosphones; i++) {
+                const idx = i * dotSpacing;
+                if (idx >= outline.length) break;
+                let [x, y] = outline[idx];
+                x += (Math.random() - 0.5) * 8;
+                y += (Math.random() - 0.5) * 8;
+                const intensity = 0.7 + Math.random() * 0.3;
+                const size = 10 + Math.random() * 10;
+                phosphones.push({ x, y, intensity, size });
+            }
         }
         // Om inga nya, använd senaste
         if (phosphones.length === 0 && lastPhosphones.length > 0) {
@@ -103,10 +146,10 @@ async function enableOutlineBackground() {
         for (const p of phosphones) {
             const r = p.size;
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-            grad.addColorStop(0, `rgba(255,255,255,${p.intensity})`); // vit kärna
-            grad.addColorStop(0.2, `rgba(200,200,200,${0.7 * p.intensity})`); // ljusgrå
-            grad.addColorStop(0.5, `rgba(120,120,120,${0.18 * p.intensity})`); // svagare grå
-            grad.addColorStop(1, 'rgba(0,0,0,0)'); // transparent
+            grad.addColorStop(0, `rgba(255,255,255,${p.intensity})`);
+            grad.addColorStop(0.2, `rgba(200,200,200,${0.7 * p.intensity})`);
+            grad.addColorStop(0.5, `rgba(120,120,120,${0.18 * p.intensity})`);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.globalAlpha = 0.95 * p.intensity;
             ctx.beginPath();
             ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
