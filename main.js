@@ -1,3 +1,84 @@
+async function enableOutlineBackground() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('output-canvas');
+    const loader = document.getElementById('loader');
+    loader.style.display = 'flex';
+    canvas.style.display = 'none';
+    video.style.display = 'block';
+
+    if (video.readyState < 2) {
+        await new Promise(resolve => {
+            video.onloadeddata = resolve;
+        });
+    }
+
+    const bodyPix = await loadBodyPix();
+    const net = await bodyPix.load();
+    loader.style.display = 'none';
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+
+    function resizeCanvas() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let lastOutline = [];
+    async function drawFrame() {
+        if (video.paused || video.ended) return;
+        const segmentation = await net.segmentPerson(video, { internalResolution: 'medium' });
+        const ctx = canvas.getContext('2d');
+        // Fyll allt med svart
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        // Rita vit outline
+        let outline = getOutlineFromSegmentation(segmentation, canvas.width, canvas.height);
+        if (outline.length === 0 && lastOutline.length > 0) {
+            outline = lastOutline;
+        } else if (outline.length > 0) {
+            lastOutline = outline;
+        }
+        ctx.save();
+        ctx.fillStyle = 'white';
+        for (let i = 0; i < outline.length; i++) {
+            const [x, y] = outline[i];
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        ctx.restore();
+        requestAnimationFrame(drawFrame);
+    }
+    drawFrame();
+}
+
+// Hjälpfunktion för att hitta konturen från segmenteringen
+function getOutlineFromSegmentation(segmentation, width, height) {
+    const outline = [];
+    const data = segmentation.data;
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const i = y * width + x;
+            if (data[i] === 1) {
+                // Om någon granne är bakgrund, är detta en kant
+                if (
+                    data[i - 1] === 0 || data[i + 1] === 0 ||
+                    data[i - width] === 0 || data[i + width] === 0
+                ) {
+                    outline.push([x, y]);
+                }
+            }
+        }
+    }
+    return outline;
+}
 function showNormalCamera() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('output-canvas');
@@ -55,9 +136,15 @@ async function enableRemoveBackground() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    let lastSegmentation = null;
     async function drawFrame() {
         if (video.paused || video.ended) return;
-        const segmentation = await net.segmentPerson(video, { internalResolution: 'medium' });
+        let segmentation = await net.segmentPerson(video, { internalResolution: 'medium' });
+        if (segmentation.data && segmentation.data.some(v => v === 1)) {
+            lastSegmentation = segmentation;
+        } else if (lastSegmentation) {
+            segmentation = lastSegmentation;
+        }
         const ctx = canvas.getContext('2d');
         // Fyll bakgrunden med svart
         ctx.save();
@@ -96,6 +183,13 @@ document.addEventListener('DOMContentLoaded', function () {
         normalCamBtn.addEventListener('click', function (e) {
             e.preventDefault();
             showNormalCamera();
+        });
+    }
+    const outlineBgBtn = document.getElementById('outline-bg');
+    if (outlineBgBtn) {
+        outlineBgBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            enableOutlineBackground();
         });
     }
 });
