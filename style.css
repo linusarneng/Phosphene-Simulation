@@ -1,0 +1,73 @@
+/* Meny uppe till höger */
+.menu-container {
+    position: fixed;
+    top: 24px;
+    right: 32px;
+    z-index: 10;
+}
+
+#menu-btn {
+    background: rgba(34,34,34,0.8);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 2rem;
+    padding: 8px 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: background 0.2s;
+}
+#menu-btn:hover {
+    background: #444;
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 48px;
+    background: #222;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    min-width: 160px;
+    overflow: hidden;
+    flex-direction: column;
+}
+.menu-dropdown.show {
+    display: flex;
+}
+.menu-dropdown a {
+    color: #fff;
+    padding: 14px 20px;
+    text-decoration: none;
+    display: block;
+    transition: background 0.2s;
+}
+.menu-dropdown a:hover {
+    background: #444;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #222;
+    color: #fff;
+}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    transform: scaleX(-1);
+}
+h1 { display: none; }

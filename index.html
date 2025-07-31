@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Kameraflöde</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="main.js"></script>
+</head>
+<body>
+    <div class="menu-container">
+        <button id="menu-btn">☰</button>
+        <div id="menu-dropdown" class="menu-dropdown">
+            <a href="#">Menyval 1</a>
+            <a href="#">Menyval 2</a>
+            <a href="#">Menyval 3</a>
+        </div>
+    </div>
+    <video id="video" autoplay playsinline></video>
+    <script>
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+            } catch (err) {
+                alert('Kunde inte starta kameran: ' + err.message);
+            }
+        }
+        startCamera();
+    </script>
+</body>
+</html>
