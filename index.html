@@ -12,8 +12,14 @@
         <div id="menu-dropdown" class="menu-dropdown">
             <a href="#" id="normal-cam">Vanlig kamera</a>
             <a href="#" id="outline-bg">Vit outline</a>
-            <a href="#">Menyval 2</a>
-            <a href="#">Menyval 3</a>
+                <div id="outline-options" style="display:none; padding: 8px 0 0 0;">
+                <button id="outline-type-dots">Prickar</button>
+                <div style="margin-top:8px; color:#fff;">
+                    <label for="dot-spacing-slider">Prick-avstånd:</label>
+                    <input type="range" id="dot-spacing-slider" min="1" max="20" value="5" style="vertical-align:middle;">
+                    <span id="dot-spacing-value">5</span>
+                </div>
+            </div>
         </div>
     </div>
     <div id="loader" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100;align-items:center;justify-content:center;background:rgba(34,34,34,0.8);color:#fff;font-size:2rem;">

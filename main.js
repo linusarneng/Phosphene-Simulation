@@ -1,3 +1,4 @@
+// Endast prickad outline
 async function enableOutlineBackground() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('output-canvas');
@@ -5,6 +6,9 @@ async function enableOutlineBackground() {
     loader.style.display = 'flex';
     canvas.style.display = 'none';
     video.style.display = 'block';
+    // Visa outline-options
+    const outlineOptions = document.getElementById('outline-options');
+    if (outlineOptions) outlineOptions.style.display = 'block';
 
     if (video.readyState < 2) {
         await new Promise(resolve => {
@@ -47,10 +51,16 @@ async function enableOutlineBackground() {
         }
         ctx.save();
         ctx.fillStyle = 'white';
-        for (let i = 0; i < outline.length; i++) {
+        // Hämta dotSpacing från slider
+        let dotSpacing = 5;
+        const dotSpacingSlider = document.getElementById('dot-spacing-slider');
+        if (dotSpacingSlider) {
+            dotSpacing = parseInt(dotSpacingSlider.value, 10) || 5;
+        }
+        for (let i = 0; i < outline.length; i += dotSpacing) {
             const [x, y] = outline[i];
             ctx.beginPath();
-            ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+            ctx.arc(x, y, 2, 0, 2 * Math.PI);
             ctx.fill();
         }
         ctx.restore();
@@ -84,6 +94,9 @@ function showNormalCamera() {
     const canvas = document.getElementById('output-canvas');
     if (canvas) canvas.style.display = 'none';
     if (video) video.style.display = 'block';
+    // Dölj outline-options
+    const outlineOptions = document.getElementById('outline-options');
+    if (outlineOptions) outlineOptions.style.display = 'none';
 }
 // Ladda TensorFlow.js och BodyPix dynamiskt om det behövs
 async function loadBodyPix() {
@@ -190,6 +203,14 @@ document.addEventListener('DOMContentLoaded', function () {
         outlineBgBtn.addEventListener('click', function (e) {
             e.preventDefault();
             enableOutlineBackground();
+        });
+    }
+    // Slider för prick-avstånd
+    const dotSpacingSlider = document.getElementById('dot-spacing-slider');
+    const dotSpacingValue = document.getElementById('dot-spacing-value');
+    if (dotSpacingSlider && dotSpacingValue) {
+        dotSpacingSlider.addEventListener('input', function () {
+            dotSpacingValue.textContent = dotSpacingSlider.value;
         });
     }
 });
