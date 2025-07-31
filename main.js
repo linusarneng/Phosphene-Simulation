@@ -296,10 +296,19 @@ async function enableOverallPhosphones() {
     if (outlineOptions) outlineOptions.style.display = 'none';
 
     function resizeCanvas() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.style.width = '100vw';
-        canvas.style.height = '100vh';
+        // På mobil: tvinga 1:1 aspect och 32x32 grid över hela ytan
+        if (/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)) {
+            const size = Math.min(window.innerWidth, window.innerHeight);
+            canvas.width = 320;
+            canvas.height = 320;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+        } else {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.style.width = '100vw';
+            canvas.style.height = '100vh';
+        }
     }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
