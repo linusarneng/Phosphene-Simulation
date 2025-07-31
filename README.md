@@ -8,22 +8,13 @@
 
 A web-based visual prosthesis (phosphone) simulator for research, education, and accessibility awareness. Simulates how a person with a visual implant might perceive the world using a live camera feed, AI segmentation, and various visualization modes.
 
+
 ## Features
 
-- **Live Camera Feed**: Uses your device's camera as input.
-- **Visualization Modes**:
-  - **Normal**: Standard camera view.
-  - **Remove Background**: AI-powered background removal using MediaPipe Selfie Segmentation.
-  - **Outline**: Shows only the white outline of the segmented foreground.
-  - **Phosphone Simulation**:
-    - **Outline Mode**: Dots (phosphones) along the outline of the segmented object.
-    - **Overall Mode**: Dots in a 32x32 (adjustable) grid simulating the entire visual field.
-    - **Grid Toggle**: Option to snap outline dots to a grid for realism.
-- **Interactive Controls**:
-  - Dropdown menu for mode selection
-  - Slider for dot/grid density
-  - Grid toggle button
-- **Mobile Friendly**: Responsive design for phones and tablets.
+- Live camera feed
+- Multiple visualization modes: normal, background removal, outline, phosphone simulation
+- Adjustable grid and dot density
+- Simple, responsive interface (works on mobile)
 
 
 ## How It Works
