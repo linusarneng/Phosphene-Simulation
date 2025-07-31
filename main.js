@@ -309,8 +309,20 @@ async function enableOverallPhosphones() {
     if (window._overallPhosphoneStop) window._overallPhosphoneStop();
     window._overallPhosphoneStop = () => { running = false; };
 
+    // Throttle: rita bara varannan frame på mobil
+    let skipFrame = false;
+    function isMobile() {
+        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    }
     function drawPhosphones() {
         if (!running) return;
+        if (isMobile()) {
+            skipFrame = !skipFrame;
+            if (skipFrame) {
+                requestAnimationFrame(drawPhosphones);
+                return;
+            }
+        }
         const ctx = canvas.getContext('2d');
         ctx.save();
         ctx.globalAlpha = 1.0;
@@ -324,6 +336,8 @@ async function enableOverallPhosphones() {
         if (dotSpacingSlider) {
             gridSize = 10 + 40 - parseInt(dotSpacingSlider.value, 10); // Omvänd slider
         }
+        // Sänk grid på mobil för bättre prestanda
+        if (isMobile() && gridSize > 20) gridSize = 16;
         const rows = Math.round(canvas.height / (canvas.width / gridSize));
         const colStep = canvas.width / gridSize;
         const rowStep = canvas.height / rows;
