@@ -59,13 +59,22 @@ async function enableRemoveBackground() {
         if (video.paused || video.ended) return;
         const segmentation = await net.segmentPerson(video, { internalResolution: 'medium' });
         const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Fyll bakgrunden med svart
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         for (let i = 0; i < data.length; i += 4) {
             if (segmentation.data[i / 4] === 0) {
-                data[i + 3] = 0; // Gör bakgrunden transparent
+                // Gör bakgrunden helt svart (RGB=0,0,0, alpha=255)
+                data[i] = 0;
+                data[i+1] = 0;
+                data[i+2] = 0;
+                data[i+3] = 255;
             }
         }
         ctx.putImageData(imageData, 0, 0);
