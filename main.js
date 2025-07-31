@@ -1,4 +1,5 @@
-// Endast prickad outline
+// ...MediaPipe-versionen av enableOutlineBackground finns nedan...
+// Endast prickad outline med MediaPipe Selfie Segmentation
 async function enableOutlineBackground() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('output-canvas');
@@ -16,8 +17,12 @@ async function enableOutlineBackground() {
         });
     }
 
-    const bodyPix = await loadBodyPix();
-    const net = await bodyPix.load();
+    // Initiera MediaPipe SelfieSegmentation
+    const selfieSegmentation = new window.SelfieSegmentation({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+    });
+    selfieSegmentation.setOptions({ modelSelection: 1 });
+
     loader.style.display = 'none';
     canvas.style.display = 'block';
     video.style.display = 'none';
@@ -32,26 +37,41 @@ async function enableOutlineBackground() {
     window.addEventListener('resize', resizeCanvas);
 
     let lastOutline = [];
-    async function drawFrame() {
+    let lastMask = null;
+
+    async function processFrame() {
         if (video.paused || video.ended) return;
-        const segmentation = await net.segmentPerson(video, { internalResolution: 'medium' });
+        await selfieSegmentation.send({ image: video });
+        requestAnimationFrame(processFrame);
+    }
+
+    selfieSegmentation.onResults((results) => {
         const ctx = canvas.getContext('2d');
-        // Fyll allt med svart
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
-        // Rita vit outline
-        let outline = getOutlineFromSegmentation(segmentation, canvas.width, canvas.height);
+        if (!results.segmentationMask) return;
+        // Hämta masken som ImageData
+        ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+        const maskData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // Skapa outline från masken
+        let outline = getOutlineFromMask(maskData, canvas.width, canvas.height);
         if (outline.length === 0 && lastOutline.length > 0) {
             outline = lastOutline;
         } else if (outline.length > 0) {
             lastOutline = outline;
         }
+        // Svärta bakgrunden igen
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        // Rita prickar
         ctx.save();
         ctx.fillStyle = 'white';
-        // Hämta dotSpacing från slider
         let dotSpacing = 5;
         const dotSpacingSlider = document.getElementById('dot-spacing-slider');
         if (dotSpacingSlider) {
@@ -64,23 +84,23 @@ async function enableOutlineBackground() {
             ctx.fill();
         }
         ctx.restore();
-        requestAnimationFrame(drawFrame);
-    }
-    drawFrame();
+    }); // <-- fixad stängande parantes
+    processFrame();
 }
 
-// Hjälpfunktion för att hitta konturen från segmenteringen
-function getOutlineFromSegmentation(segmentation, width, height) {
+// Hjälpfunktion för att hitta konturen från masken (MediaPipe)
+function getOutlineFromMask(maskData, width, height) {
     const outline = [];
-    const data = segmentation.data;
+    const data = maskData.data;
     for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
-            const i = y * width + x;
-            if (data[i] === 1) {
+            const i = (y * width + x) * 4;
+            // Vit pixel = person, svart = bakgrund
+            if (data[i] > 128) {
                 // Om någon granne är bakgrund, är detta en kant
                 if (
-                    data[i - 1] === 0 || data[i + 1] === 0 ||
-                    data[i - width] === 0 || data[i + width] === 0
+                    data[i - 4] <= 128 || data[i + 4] <= 128 ||
+                    data[i - width * 4] <= 128 || data[i + width * 4] <= 128
                 ) {
                     outline.push([x, y]);
                 }
@@ -88,24 +108,7 @@ function getOutlineFromSegmentation(segmentation, width, height) {
         }
     }
     return outline;
-}
-function showNormalCamera() {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('output-canvas');
-    if (canvas) canvas.style.display = 'none';
-    if (video) video.style.display = 'block';
-    // Dölj outline-options
-    const outlineOptions = document.getElementById('outline-options');
-    if (outlineOptions) outlineOptions.style.display = 'none';
-}
-// Ladda TensorFlow.js och BodyPix dynamiskt om det behövs
-async function loadBodyPix() {
-    if (!window.bodyPix) {
-        await Promise.all([
-            loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js'),
-            loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js')
-        ]);
-    }
+// ...slut på getOutlineFromMask...
     return window.bodyPix;
 }
 
