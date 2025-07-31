@@ -10,13 +10,16 @@
 </head>
 <body>
     <div class="menu-container">
+        <!-- Flip button moved to dropdown -->
         <button id="rotate-btn" title="Rotera kameran">⟳</button>
         <button id="menu-btn">☰</button>
         <div id="menu-dropdown" class="menu-dropdown">
             <a href="#" id="normal-cam">Vanlig kamera</a>
             <a href="#" id="overall-cam">Overall</a>
             <a href="#" id="outline-bg">Vit outline</a>
-                <div id="outline-options" style="display:none; padding: 8px 0 0 0;">
+            <button id="flip-btn" style="width:100%;margin:8px 0 0 0;">Vänd upp/ner ⇵</button>
+            <button id="flip-side-btn" style="width:100%;margin:8px 0 0 0;">Vänd sida ⇋</button>
+            <div id="outline-options" style="display:none; padding: 8px 0 0 0;">
                 <button id="outline-type-dots">Prickar</button>
                 <button id="outline-type-grid">Rutnät</button>
                 <div style="margin-top:8px; color:#fff;">
@@ -38,6 +41,8 @@
         const videoEl = document.getElementById('video');
         const canvasEl = document.getElementById('output-canvas');
         const rotateBtn = document.getElementById('rotate-btn');
+        let flipped = false;
+        let flippedSide = false;
 
         async function startCamera(back = false) {
             if (currentStream) {
@@ -52,11 +57,32 @@
                 alert('Kunde inte starta kameran: ' + err.message);
             }
         }
+
+        function updateTransforms() {
+            let base = '';
+            // Always mirror for selfie/front camera
+            if (!usingBackCamera) base += 'scaleX(-1) ';
+            if (flipped) base += 'scaleY(-1) ';
+            if (flippedSide) base += 'scaleX(-1) ';
+            videoEl.style.transform = base.trim();
+            canvasEl.style.transform = base.trim();
+        }
+
         startCamera();
+        updateTransforms();
 
         rotateBtn.addEventListener('click', () => {
             usingBackCamera = !usingBackCamera;
             startCamera(usingBackCamera);
+        });
+
+        document.getElementById('flip-btn').addEventListener('click', () => {
+            flipped = !flipped;
+            updateTransforms();
+        });
+        document.getElementById('flip-side-btn').addEventListener('click', () => {
+            flippedSide = !flippedSide;
+            updateTransforms();
         });
     </script>
 </body>
