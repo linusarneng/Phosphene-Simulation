@@ -85,7 +85,10 @@ async function enableOutlineBackground() {
             // Lägg till lite slump för att simulera "jitter" i stimuleringen
             x += (Math.random() - 0.5) * 8;
             y += (Math.random() - 0.5) * 8;
-            phosphones.push({ x, y });
+            // Slumpa intensitet och storlek
+            const intensity = 0.7 + Math.random() * 0.3; // 0.7–1.0
+            const size = 10 + Math.random() * 10; // 10–20 px
+            phosphones.push({ x, y, intensity, size });
         }
         // Om inga nya, använd senaste
         if (phosphones.length === 0 && lastPhosphones.length > 0) {
@@ -96,13 +99,13 @@ async function enableOutlineBackground() {
         // Rita suddiga phosphones (gaussian glow) ENDAST på konturen
         ctx.save();
         for (const p of phosphones) {
-            const r = 14;
+            const r = p.size;
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-            grad.addColorStop(0, 'rgba(255,255,255,1)'); // vit kärna
-            grad.addColorStop(0.2, 'rgba(200,200,200,0.7)'); // ljusgrå
-            grad.addColorStop(0.5, 'rgba(120,120,120,0.18)'); // svagare grå
+            grad.addColorStop(0, `rgba(255,255,255,${p.intensity})`); // vit kärna
+            grad.addColorStop(0.2, `rgba(200,200,200,${0.7 * p.intensity})`); // ljusgrå
+            grad.addColorStop(0.5, `rgba(120,120,120,${0.18 * p.intensity})`); // svagare grå
             grad.addColorStop(1, 'rgba(0,0,0,0)'); // transparent
-            ctx.globalAlpha = 0.95;
+            ctx.globalAlpha = 0.95 * p.intensity;
             ctx.beginPath();
             ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
             ctx.fillStyle = grad;
