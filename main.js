@@ -45,17 +45,24 @@ async function enableOutlineBackground() {
         requestAnimationFrame(processFrame);
     }
 
+    // Spara senaste phosphone-punkter för att minska blink
+    let lastPhosphones = [];
     selfieSegmentation.onResults((results) => {
         const ctx = canvas.getContext('2d');
+        // Mjuk fade till svart för att minska blink
         ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 0.25;
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
         if (!results.segmentationMask) return;
-        // Hämta masken som ImageData
-        ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
-        const maskData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // Hämta masken som ImageData (utan att rita ut masken på canvas)
+        const offscreen = document.createElement('canvas');
+        offscreen.width = canvas.width;
+        offscreen.height = canvas.height;
+        const offctx = offscreen.getContext('2d');
+        offctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+        const maskData = offctx.getImageData(0, 0, canvas.width, canvas.height);
         // Skapa outline från masken
         let outline = getOutlineFromMask(maskData, canvas.width, canvas.height);
         if (outline.length === 0 && lastOutline.length > 0) {
@@ -63,28 +70,47 @@ async function enableOutlineBackground() {
         } else if (outline.length > 0) {
             lastOutline = outline;
         }
-        // Svärta bakgrunden igen
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-        // Rita prickar
-        ctx.save();
-        ctx.fillStyle = 'white';
-        let dotSpacing = 5;
+        // Välj ut phosphone-punkter
+        let dotSpacing = 15;
         const dotSpacingSlider = document.getElementById('dot-spacing-slider');
         if (dotSpacingSlider) {
-            dotSpacing = parseInt(dotSpacingSlider.value, 10) || 5;
+            dotSpacing = parseInt(dotSpacingSlider.value, 10) || 15;
         }
-        for (let i = 0; i < outline.length; i += dotSpacing) {
-            const [x, y] = outline[i];
+        const numPhosphones = Math.floor(outline.length / dotSpacing);
+        let phosphones = [];
+        for (let i = 0; i < numPhosphones; i++) {
+            const idx = i * dotSpacing;
+            if (idx >= outline.length) break;
+            let [x, y] = outline[idx];
+            // Lägg till lite slump för att simulera "jitter" i stimuleringen
+            x += (Math.random() - 0.5) * 8;
+            y += (Math.random() - 0.5) * 8;
+            phosphones.push({ x, y });
+        }
+        // Om inga nya, använd senaste
+        if (phosphones.length === 0 && lastPhosphones.length > 0) {
+            phosphones = lastPhosphones;
+        } else if (phosphones.length > 0) {
+            lastPhosphones = phosphones;
+        }
+        // Rita suddiga phosphones (gaussian glow) ENDAST på konturen
+        ctx.save();
+        for (const p of phosphones) {
+            const r = 14;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.2, 'rgba(255,255,200,0.7)');
+            grad.addColorStop(0.5, 'rgba(255,255,180,0.25)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalAlpha = 0.95;
             ctx.beginPath();
-            ctx.arc(x, y, 2, 0, 2 * Math.PI);
+            ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+            ctx.fillStyle = grad;
             ctx.fill();
         }
+        ctx.globalAlpha = 1.0;
         ctx.restore();
-    }); // <-- fixad stängande parantes
+    });
     processFrame();
 }
 
