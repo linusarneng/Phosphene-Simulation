@@ -88,9 +88,14 @@ async function enableOutlineBackground() {
         }
         let phosphones = [];
         if (outlineGridMode) {
-            // Rutnät: 32x32
-            const gridX = 32;
-            const gridY = 32;
+            // Rutnät: använd vald upplösning
+            let gridRes = 32;
+            const gridResSelect = document.getElementById('grid-res-select');
+            if (gridResSelect) {
+                gridRes = parseInt(gridResSelect.value, 10) || 32;
+            }
+            const gridX = gridRes;
+            const gridY = gridRes;
             const cellW = canvas.width / gridX;
             const cellH = canvas.height / gridY;
             for (let gx = 0; gx < gridX; gx++) {
@@ -340,27 +345,42 @@ async function enableOverallPhosphones() {
         ctx.restore();
 
         // Justerbar täthet
+        // Hämta gridSize från settings
         let gridSize = 32;
-        const dotSpacingSlider = document.getElementById('dot-spacing-slider');
-        if (dotSpacingSlider) {
-            gridSize = 10 + 40 - parseInt(dotSpacingSlider.value, 10); // Omvänd slider
+        const gridResSelectOverall = document.getElementById('grid-res-select');
+        if (gridResSelectOverall) {
+            gridSize = parseInt(gridResSelectOverall.value, 10) || 32;
         }
-        // Sänk grid på mobil för bättre prestanda
-        if (isMobile() && gridSize > 20) gridSize = 16;
-        const rows = Math.round(canvas.height / (canvas.width / gridSize));
-        const colStep = canvas.width / gridSize;
-        const rowStep = canvas.height / rows;
+        // Padding i procent av canvasstorlek
+        const padX = canvas.width * 0.06;
+        const padY = canvas.height * 0.06;
+        const gridW = canvas.width - padX * 2;
+        const gridH = canvas.height - padY * 2;
+        const colStep = gridW / gridSize;
+        const rowStep = gridH / gridSize;
+
+    // Byt grid-upplösning live i overall-läget
+    const gridResSelectMenu = document.getElementById('grid-res-select');
+    if (gridResSelectMenu) {
+        gridResSelectMenu.addEventListener('change', function () {
+            // Om overall-läget är aktivt, starta om det
+            const canvas = document.getElementById('output-canvas');
+            if (canvas && canvas.style.display === 'block') {
+                enableOverallPhosphones();
+            }
+        });
+    }
 
         // Hämta pixeldata från videon
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (let y = 0; y < rows; y++) {
+        for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
                 // Ta pixel i mitten av rutan
-                const px = Math.floor((x + 0.5) * colStep);
-                const py = Math.floor((y + 0.5) * rowStep);
+                const px = Math.floor(padX + (x + 0.5) * colStep);
+                const py = Math.floor(padY + (y + 0.5) * rowStep);
                 const i = (py * canvas.width + px) * 4;
                 const r = frame.data[i];
                 const g = frame.data[i+1];
@@ -426,6 +446,14 @@ document.addEventListener('DOMContentLoaded', function () {
         e.stopPropagation();
         menuDropdown.classList.toggle('show');
     });
+
+    // Förhindra att klick på grid-res-select stänger menyn
+    const gridResSelectMenu = document.getElementById('grid-res-select');
+    if (gridResSelectMenu) {
+        gridResSelectMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 
     document.addEventListener('click', function () {
         menuDropdown.classList.remove('show');
