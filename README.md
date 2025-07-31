@@ -1,6 +1,6 @@
 
 
-# Implant Simulator
+# Phosphene Simulation
 
 <p align="center">
   <img src="images/ss_01.png" alt="Phosphene Simulation Screenshot" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 24px #0005; margin-bottom: 24px;">
