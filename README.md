@@ -1,9 +1,10 @@
 
+
+# Implant Simulator
+
 <p align="center">
   <img src="images/ss_01.png" alt="Implant Simulator Screenshot" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 24px #0005; margin-bottom: 24px;">
 </p>
-
-# Implant Simulator
 
 A web-based visual prosthesis (phosphone) simulator for research, education, and accessibility awareness. Simulates how a person with a visual implant might perceive the world using a live camera feed, AI segmentation, and various visualization modes.
 
@@ -24,11 +25,6 @@ A web-based visual prosthesis (phosphone) simulator for research, education, and
   - Grid toggle button
 - **Mobile Friendly**: Responsive design for phones and tablets.
 
-## Screenshots
-
-| Normal | Remove Background | Outline | Phosphone (Outline) | Phosphone (Overall) |
-|--------|------------------|---------|---------------------|---------------------|
-| ![Normal](docs/screenshot_normal.jpg) | ![Remove BG](docs/screenshot_removebg.jpg) | ![Outline](docs/screenshot_outline.jpg) | ![Phosphone Outline](docs/screenshot_phosphone_outline.jpg) | ![Phosphone Overall](docs/screenshot_phosphone_overall.jpg) |
 
 ## How It Works
 
