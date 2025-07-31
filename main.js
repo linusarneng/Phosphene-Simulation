@@ -302,9 +302,7 @@ async function enableOverallPhosphones() {
                 // Enkel luminans
                 const lum = 0.2126*r + 0.7152*g + 0.0722*b;
                 // Slumpa intensitet och storlek
-                let intensity = (lum/255) * (0.7 + Math.random()*0.3);
-                // Ca 20% av phosphones blir extra ljusa för att öka "see-through"
-                if (Math.random() < 0.2) intensity = Math.min(1, intensity * 1.7 + 0.15);
+                const intensity = (lum/255) * (0.7 + Math.random()*0.3);
                 const size = 8 + Math.random()*10;
                 // Rita bara om det är tillräckligt ljust
                 if (intensity > 0.08) {
