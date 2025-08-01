@@ -88,11 +88,17 @@ async function enableOutlineBackground() {
         }
         let phosphones = [];
         if (outlineGridMode) {
-            // Rutnät: använd vald upplösning
+            // Rutnät: använd vald upplösning och outline-tjocklek
             let gridRes = 32;
             const gridResSelect = document.getElementById('grid-res-select');
             if (gridResSelect) {
                 gridRes = parseInt(gridResSelect.value, 10) || 32;
+            }
+            // Outline-tjocklek från slider
+            let outlineThickness = 18;
+            const outlineThicknessSlider = document.getElementById('outline-thickness-slider');
+            if (outlineThicknessSlider) {
+                outlineThickness = parseInt(outlineThicknessSlider.value, 10) || 18;
             }
             const gridX = gridRes;
             const gridY = gridRes;
@@ -113,7 +119,7 @@ async function enableOutlineBackground() {
                             nearest = [ox, oy];
                         }
                     }
-                    if (nearest && Math.sqrt(minDist) < Math.max(cellW, cellH)) {
+                    if (nearest && Math.sqrt(minDist) < outlineThickness) {
                         // Slumpa intensitet och storlek
                         const intensity = 0.7 + Math.random() * 0.3;
                         const size = 10 + Math.random() * 10;
@@ -149,17 +155,24 @@ async function enableOutlineBackground() {
         // Rita suddiga phosphones (gaussian glow) ENDAST på konturen
         ctx.save();
         for (const p of phosphones) {
-            const r = p.size;
+            // Mer realistisk phosphene: gaussian blur, färgtemperatur, halo, mjukare kanter
+            const r = p.size * (1.1 + Math.random() * 0.4); // lite större och varierande
+            // Färgtemperatur: gulaktig eller blåaktig tint
+            const tint = Math.random() < 0.5 ? [255, 240 + Math.random()*15, 180 + Math.random()*40] : [200 + Math.random()*40, 220 + Math.random()*30, 255];
+            const [tr, tg, tb] = tint;
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-            grad.addColorStop(0, `rgba(255,255,255,${p.intensity})`);
-            grad.addColorStop(0.2, `rgba(200,200,200,${0.7 * p.intensity})`);
-            grad.addColorStop(0.5, `rgba(120,120,120,${0.18 * p.intensity})`);
+            grad.addColorStop(0, `rgba(${tr},${tg},${tb},${p.intensity})`);
+            grad.addColorStop(0.18 + Math.random()*0.07, `rgba(${tr},${tg},${tb},${0.7 * p.intensity})`);
+            grad.addColorStop(0.38 + Math.random()*0.08, `rgba(180,180,180,${0.18 * p.intensity})`);
+            grad.addColorStop(0.7 + Math.random()*0.1, `rgba(80,80,120,${0.08 * p.intensity})`); // halo
             grad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.globalAlpha = 0.95 * p.intensity;
+            ctx.globalAlpha = 0.85 * p.intensity + Math.random()*0.08;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+            ctx.arc(p.x, p.y, r * (0.95 + Math.random()*0.1), 0, 2 * Math.PI);
+            ctx.filter = `blur(${2.5 + Math.random()*2.5}px)`;
             ctx.fillStyle = grad;
             ctx.fill();
+            ctx.filter = 'none';
         }
         ctx.globalAlpha = 1.0;
         ctx.restore();
@@ -433,6 +446,14 @@ function showNormalCamera() {
     if (dotSpacingSlider && dotSpacingValue) {
         dotSpacingSlider.addEventListener('input', function () {
             dotSpacingValue.textContent = dotSpacingSlider.value;
+        });
+    }
+    // Slider för outline-tjocklek
+    const outlineThicknessSlider = document.getElementById('outline-thickness-slider');
+    const outlineThicknessValue = document.getElementById('outline-thickness-value');
+    if (outlineThicknessSlider && outlineThicknessValue) {
+        outlineThicknessSlider.addEventListener('input', function () {
+            outlineThicknessValue.textContent = outlineThicknessSlider.value;
         });
     }
 });
